@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  #  Database Service named 'database'
+  database:
+    image: postgres:15
+    container_name: database
+    environment:
+      POSTGRES_DB: saas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432" # 
+    volumes:
+      - db_data:/var/lib/postgresql/data # 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #  Backend Service named 'backend'
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "5000:5000" # 
+    environment:
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=saas_db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=development_secret_key_12345
+      - FRONTEND_URL=http://frontend:3000 # 
+      - PORT=5000
+    depends_on:
+      database:
+        condition: service_healthy
+    command: sh -c "npm install && npm run migrate && npm run seed && npm run dev" #  Automatic startup
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"] # 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  #  Frontend Service named 'frontend'
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000" # 
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api # Browser accesses backend via localhost
+    depends_on:
+      backend:
+        condition: service_healthy
+    # For dev, we use npm start. For prod, we would build. 
+    # Evaluation requires access at localhost:3000.
+    command: npm start 
+
+volumes:
+  db_data:
