@@ -1,8 +1,13 @@
+require('dotenv').config();
 const { Client } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@database:5432/saas_db'
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD || 'postgres',
+  database: process.env.DB_NAME || 'saas_db',
 });
 
 async function seed() {

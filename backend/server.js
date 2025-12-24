@@ -7,7 +7,6 @@ const taskRoutes = require('./src/routes/taskRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const tenantUserRoutes = require('./src/routes/tenantUserRoutes');
 
-const authRoutes = require('./src/routes/authRoutes');
 // const tenantRoutes = require('./src/routes/tenantRoutes'); // To be implemented
 // const userRoutes = require('./src/routes/userRoutes');     // To be implemented
 // const projectRoutes = require('./src/routes/projectRoutes'); // To be implemented
