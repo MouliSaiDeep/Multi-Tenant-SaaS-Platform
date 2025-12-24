@@ -12,7 +12,7 @@ exports.addUser = async (req, res) => {
     }
 
     try {
-        [cite_start]// 1. Check Subscription Limits [cite: 132-137, 647]
+        // 1. Check Subscription Limits 
         // Get tenant's max_users and current user count
         const limitRes = await db.query(
             `SELECT t.max_users, count(u.id) as current_count 
@@ -104,7 +104,7 @@ exports.updateUser = async (req, res) => {
     const { fullName, role, isActive } = req.body;
     const currentUser = req.user;
 
-    [cite_start]// Authorization Check [cite: 691]
+    // Authorization Check 
     // Only tenant_admin can update anyone; users can only update themselves (limited fields)
     if (currentUser.role !== 'tenant_admin' && currentUser.userId !== id) {
         return res.status(403).json({ success: false, message: 'Not authorized' });
@@ -157,7 +157,7 @@ exports.deleteUser = async (req, res) => {
         return res.status(403).json({ success: false, message: 'Only admins can delete users' });
     }
 
-    [cite_start]// Prevent self-deletion [cite: 725]
+    // Prevent self-deletion 
     if (id === userId) {
         return res.status(403).json({ success: false, message: 'Cannot delete yourself' });
     }

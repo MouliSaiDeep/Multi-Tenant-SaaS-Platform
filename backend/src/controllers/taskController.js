@@ -7,7 +7,7 @@ exports.createTask = async (req, res) => {
   const { tenantId, userId } = req.user;
 
   try {
-    [cite_start]// 1. Verify Project belongs to Tenant [cite: 870]
+    // 1. Verify Project belongs to Tenant 
     const projectCheck = await db.query(
       'SELECT id FROM projects WHERE id = $1 AND tenant_id = $2', 
       [projectId, tenantId]
@@ -16,7 +16,7 @@ exports.createTask = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Project not found or access denied' });
     }
 
-    [cite_start]// 2. If assignedTo is present, verify user belongs to tenant [cite: 872]
+    // 2. If assignedTo is present, verify user belongs to tenant 
     if (assignedTo) {
       const userCheck = await db.query('SELECT id FROM users WHERE id = $1 AND tenant_id = $2', [assignedTo, tenantId]);
       if (userCheck.rows.length === 0) {
@@ -72,7 +72,7 @@ exports.getTasks = async (req, res) => {
         paramIndex++;
     }
     
-    [cite_start]// Default Sort: Priority then Due Date [cite: 917]
+    // Default Sort: Priority then Due Date 
     queryText += ` ORDER BY 
       CASE WHEN t.priority = 'high' THEN 1 WHEN t.priority = 'medium' THEN 2 ELSE 3 END,
       t.due_date ASC`;

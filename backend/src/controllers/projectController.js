@@ -6,7 +6,7 @@ exports.createProject = async (req, res) => {
   const { tenantId, userId } = req.user;
 
   try {
-    [cite_start]// 1. Check Subscription Limits [cite: 132-137, 755]
+    // 1. Check Subscription Limits 
     const limitRes = await db.query(
       `SELECT t.max_projects, count(p.id) as current_count 
        FROM tenants t 
@@ -33,7 +33,7 @@ exports.createProject = async (req, res) => {
       [tenantId, name, description, status || 'active', userId]
     );
 
-    [cite_start]// 3. Audit Log [cite: 129]
+    // 3. Audit Log 
     await db.query(
       `INSERT INTO audit_logs (tenant_id, user_id, action, entity_type, entity_id)
        VALUES ($1, $2, 'CREATE_PROJECT', 'project', $3)`,
@@ -94,7 +94,7 @@ exports.updateProject = async (req, res) => {
   const { tenantId, role, userId } = req.user;
 
   try {
-    [cite_start]// Check ownership or admin role [cite: 824]
+    // Check ownership or admin role 
     const projectCheck = await db.query('SELECT * FROM projects WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
     if (projectCheck.rows.length === 0) return res.status(404).json({ success: false, message: 'Project not found' });
 
