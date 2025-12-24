@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const projectRoutes = require('./src/routes/projectRoutes');
+const taskRoutes = require('./src/routes/taskRoutes');
 
 const authRoutes = require('./src/routes/authRoutes');
 // const tenantRoutes = require('./src/routes/tenantRoutes'); // To be implemented
@@ -20,6 +22,8 @@ app.use(cors({
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Health Check [cite: 160]
 app.get('/api/health', async (req, res) => {
