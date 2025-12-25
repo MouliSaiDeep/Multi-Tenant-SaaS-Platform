@@ -13,7 +13,7 @@ exports.registerTenant = async (req, res) => {
     // 1. Create Tenant
     const tenantRes = await client.query(
       `INSERT INTO tenants (name, subdomain, status, subscription_plan) 
-       VALUES ($1, $2, 'active', 'free') RETURNING id`,
+   VALUES ($1, $2, $3, $4) RETURNING id`,
       [tenantName, subdomain, 'active', 'free']
     );
     const tenantId = tenantRes.rows[0].id;
@@ -72,7 +72,7 @@ exports.login = async (req, res) => {
 
     // 2. Find User in Tenant
     const userRes = await db.query(
-      'SELECT * FROM users WHERE email = $1 AND tenant_id = $2', 
+      'SELECT * FROM users WHERE email = $1 AND tenant_id = $2',
       [email, tenant.id]
     );
 
@@ -80,27 +80,27 @@ exports.login = async (req, res) => {
     // NOTE: For evaluation simplicity, standard login flow focuses on tenant users. 
     // Super admins might login via a specific "admin" subdomain or separate flow.
     // Here we check standard user logic:
-    
+
     if (userRes.rows.length === 0) {
-       // Check if it's a super admin login (global)
-       const superAdminRes = await db.query(
-         'SELECT * FROM users WHERE email = $1 AND role = $2', 
-         [email, 'super_admin']
-       );
-       
-       if (superAdminRes.rows.length > 0) {
-          const superUser = superAdminRes.rows[0];
-          const isMatch = await bcrypt.compare(password, superUser.password_hash);
-          if (isMatch) {
-             const token = jwt.sign(
-               { userId: superUser.id, tenantId: null, role: 'super_admin' },
-               process.env.JWT_SECRET,
-               { expiresIn: '24h' }
-             );
-             return res.status(200).json({ success: true, data: { token, user: { ...superUser, password_hash: undefined } } });
-          }
-       }
-       return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      // Check if it's a super admin login (global)
+      const superAdminRes = await db.query(
+        'SELECT * FROM users WHERE email = $1 AND role = $2',
+        [email, 'super_admin']
+      );
+
+      if (superAdminRes.rows.length > 0) {
+        const superUser = superAdminRes.rows[0];
+        const isMatch = await bcrypt.compare(password, superUser.password_hash);
+        if (isMatch) {
+          const token = jwt.sign(
+            { userId: superUser.id, tenantId: null, role: 'super_admin' },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+          );
+          return res.status(200).json({ success: true, data: { token, user: { ...superUser, password_hash: undefined } } });
+        }
+      }
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     const user = userRes.rows[0];
@@ -145,11 +145,11 @@ exports.getMe = async (req, res) => {
       'SELECT id, email, full_name, role, is_active, tenant_id FROM users WHERE id = $1',
       [req.user.userId]
     );
-    
+
     if (userRes.rows.length === 0) return res.status(404).json({ success: false, message: 'User not found' });
-    
+
     const user = userRes.rows[0];
-    
+
     // Fetch Tenant Data if not super admin
     if (user.tenant_id) {
       const tenantRes = await db.query('SELECT name, subdomain, subscription_plan FROM tenants WHERE id = $1', [user.tenant_id]);
