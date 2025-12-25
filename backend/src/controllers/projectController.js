@@ -3,11 +3,16 @@ const db = require('../config/db');
 // API 12: Create Project (Enforces Subscription Limits)
 exports.createProject = async (req, res) => {
   const { name, description, status } = req.body;
+  
+  // LOG 1: Check what data came from the frontend
+  console.log("Body:", req.body);
+  console.log("User Context:", req.user);
+
   const { tenantId, userId } = req.user;
 
   try {
-    // 1. Check Subscription Limits 
-    const limitRes = await db.query(
+    // 1. Check Subscription Limits
+     const limitRes = await db.query(
       `SELECT t.max_projects, count(p.id) as current_count 
        FROM tenants t 
        LEFT JOIN projects p ON p.tenant_id = t.id 
@@ -16,12 +21,18 @@ exports.createProject = async (req, res) => {
       [tenantId]
     );
 
+    // LOG 2: Check if the tenant was found
+    if (limitRes.rows.length === 0) {
+        console.error("ERROR: Tenant not found in DB or Query returned no rows");
+        return res.status(500).json({ success: false, message: 'Tenant lookup failed' });
+    }
+
     const { max_projects, current_count } = limitRes.rows[0];
     
     if (parseInt(current_count) >= max_projects) {
-      return res.status(403).json({ 
+       return res.status(403).json({ 
         success: false, 
-        message: 'Subscription limit reached. Upgrade plan to create more projects.' 
+        message: 'Subscription limit reached.' 
       });
     }
 
@@ -33,7 +44,7 @@ exports.createProject = async (req, res) => {
       [tenantId, name, description, status || 'active', userId]
     );
 
-    // 3. Audit Log 
+    // 3. Audit Log
     await db.query(
       `INSERT INTO audit_logs (tenant_id, user_id, action, entity_type, entity_id)
        VALUES ($1, $2, 'CREATE_PROJECT', 'project', $3)`,
@@ -43,7 +54,9 @@ exports.createProject = async (req, res) => {
     res.status(201).json({ success: true, data: result.rows[0] });
 
   } catch (error) {
-    console.error(error);
+    // LOG 3: The actual error
+    console.error("!!! FATAL ERROR IN CREATE PROJECT !!!");
+    console.error(error); 
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

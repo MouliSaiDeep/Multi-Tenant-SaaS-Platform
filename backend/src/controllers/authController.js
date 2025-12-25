@@ -138,26 +138,42 @@ exports.login = async (req, res) => {
   }
 };
 
-// API 3: Get Current User
+// API 3: Get Current User (Refreshed from DB)
 exports.getMe = async (req, res) => {
   try {
-    const userRes = await db.query(
-      'SELECT id, email, full_name, role, is_active, tenant_id FROM users WHERE id = $1',
+    // Query DB to get the LATEST tenant plan details
+    // We join users with tenants to get the fresh subscription_plan
+    const result = await client.query(
+      `SELECT u.id, u.full_name, u.email, u.role, u.tenant_id, 
+              t.name as tenant_name, t.subscription_plan 
+       FROM users u 
+       JOIN tenants t ON u.tenant_id = t.id 
+       WHERE u.id = $1`,
       [req.user.userId]
     );
 
-    if (userRes.rows.length === 0) return res.status(404).json({ success: false, message: 'User not found' });
-
-    const user = userRes.rows[0];
-
-    // Fetch Tenant Data if not super admin
-    if (user.tenant_id) {
-      const tenantRes = await db.query('SELECT name, subdomain, subscription_plan FROM tenants WHERE id = $1', [user.tenant_id]);
-      user.tenant = tenantRes.rows[0];
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.status(200).json({ success: true, data: user });
+    const user = result.rows[0];
+
+    // reconstruct the user object for the frontend
+    const freshUserData = {
+      userId: user.id,
+      fullName: user.full_name,
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenant_id,
+      tenant: {
+        name: user.tenant_name,
+        subscriptionPlan: user.subscription_plan // <--- This will now be 'pro'
+      }
+    };
+
+    res.status(200).json({ success: true, data: freshUserData });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

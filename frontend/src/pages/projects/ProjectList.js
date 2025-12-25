@@ -11,7 +11,7 @@ const ProjectList = () => {
 
   const fetchProjects = async () => {
     try {
-      const { data } = await api.get('/api/projects');
+      const { data } = await api.get('/projects');
       setProjects(data.data);
     } catch (err) {
       console.error(err);
@@ -25,7 +25,7 @@ const ProjectList = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/projects', newProject);
+      await api.post('/projects', newProject);
       setShowForm(false);
       setNewProject({ name: '', description: '' });
       fetchProjects(); // Refresh list

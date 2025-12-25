@@ -28,6 +28,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/tenants/:tenantId/users', tenantUserRoutes); // Mount nested route
+app.use('/api/tenants', require('./src/routes/tenantRoutes'));
 
 // Health Check 
 app.get('/api/health', async (req, res) => {

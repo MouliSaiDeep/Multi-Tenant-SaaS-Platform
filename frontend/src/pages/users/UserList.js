@@ -12,7 +12,7 @@ const UserList = () => {
     const fetchUsers = async () => {
         try {
             // Need tenantId to fetch users. Assuming user object has tenantId or fetching from /me
-            const { data } = await api.get(`/api/tenants/${user.tenantId}/users`);
+            const { data } = await api.get(`/tenants/${user.tenantId}/users`);
             setUsers(data.data);
         } catch (err) {
             console.error(err);
@@ -26,7 +26,7 @@ const UserList = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
-            await api.post(`/api/tenants/${user.tenantId}/users`, newUser);
+            await api.post(`/tenants/${user.tenantId}/users`, newUser);
             setShowForm(false);
             setNewUser({ email: '', fullName: '', password: '', role: 'user' });
             fetchUsers();

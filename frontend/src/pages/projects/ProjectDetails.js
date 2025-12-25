@@ -18,10 +18,10 @@ const ProjectDetails = () => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
-                const projRes = await api.get(`/api/projects/${id}`);
+                const projRes = await api.get(`/projects/${id}`);
                 setProject(projRes.data.data);
 
-                const taskRes = await api.get(`/api/projects/${id}/tasks`);
+                const taskRes = await api.get(`/projects/${id}/tasks`);
                 setTasks(taskRes.data.data);
             } catch (err) {
                 console.error(err);
@@ -38,7 +38,7 @@ const ProjectDetails = () => {
     const handleAddTask = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await api.post(`/api/projects/${id}/tasks`, newTask);
+            const { data } = await api.post(`/projects/${id}/tasks`, newTask);
             setTasks([...tasks, { ...data.data, assignee_name: 'Unassigned' }]); // Optimistic update
             setNewTask({ title: '', priority: 'medium' });
         } catch (err) {
@@ -48,7 +48,7 @@ const ProjectDetails = () => {
 
     const updateStatus = async (taskId, newStatus) => {
         try {
-            await api.patch(`/api/tasks/${taskId}/status`, { status: newStatus });
+            await api.patch(`/tasks/${taskId}/status`, { status: newStatus });
             setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
         } catch (err) {
             console.error('Failed to update status');
@@ -58,7 +58,7 @@ const ProjectDetails = () => {
     const handleDeleteProject = async () => {
         if (!window.confirm('Are you sure? This will delete all tasks.')) return;
         try {
-            await api.delete(`/api/projects/${id}`);
+            await api.delete(`/projects/${id}`);
             navigate('/projects');
         } catch (err) {
             alert('Failed to delete project');
