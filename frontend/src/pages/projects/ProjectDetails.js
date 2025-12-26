@@ -8,136 +8,168 @@ const ProjectDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
-
+    
     const [project, setProject] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [newTask, setNewTask] = useState({ title: '', priority: 'medium' });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    // Fetch Project and Tasks
+    // 1. Fetch Project & Tasks
     useEffect(() => {
-        const fetchDetails = async () => {
+        const fetchProjectDetails = async () => {
             try {
-                const projRes = await api.get(`/projects/${id}`);
-                setProject(projRes.data.data);
+                const projectRes = await api.get(`/projects/${id}`);
+                setProject(projectRes.data.data);
 
-                const taskRes = await api.get(`/projects/${id}/tasks`);
-                setTasks(taskRes.data.data);
+                const tasksRes = await api.get(`/projects/${id}/tasks`);
+                setTasks(tasksRes.data.data);
             } catch (err) {
-                console.error(err);
-                if (err.response?.status === 403 || err.response?.status === 404) {
-                    navigate('/projects');
-                }
+                console.error("Error fetching details:", err);
+                setError('Failed to load project details.');
             } finally {
                 setLoading(false);
             }
         };
-        fetchDetails();
-    }, [id, navigate]);
 
-    const handleAddTask = async (e) => {
-        e.preventDefault();
+        if (user) fetchProjectDetails();
+    }, [id, user]);
+
+    // 2. THE MISSING FUNCTION (Restored)
+    const addTask = async () => {
+        if (!newTask.title.trim()) {
+            alert("Please enter a task title");
+            return;
+        }
+
         try {
-            const { data } = await api.post(`/projects/${id}/tasks`, newTask);
-            setTasks([...tasks, { ...data.data, assignee_name: 'Unassigned' }]); // Optimistic update
-            setNewTask({ title: '', priority: 'medium' });
+            const { data } = await api.post('/tasks', {
+                projectId: id,
+                title: newTask.title,
+                priority: newTask.priority
+            });
+
+            // Update UI immediately
+            setTasks([...tasks, data.data]);
+            setNewTask({ title: '', priority: 'medium' }); // Reset form
         } catch (err) {
-            alert('Failed to add task');
+            console.error("Failed to add task:", err);
+            alert("Failed to add task. Check console for details.");
         }
     };
 
-    const updateStatus = async (taskId, newStatus) => {
+    // 3. Delete Task Helper
+    const deleteTask = async (taskId) => {
+        if (!window.confirm("Are you sure?")) return;
         try {
-            await api.patch(`/tasks/${taskId}/status`, { status: newStatus });
-            setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+            await api.delete(`/tasks/${taskId}`);
+            setTasks(tasks.filter(t => t.id !== taskId));
         } catch (err) {
-            console.error('Failed to update status');
+            alert("Failed to delete task");
         }
     };
 
-    const handleDeleteProject = async () => {
-        if (!window.confirm('Are you sure? This will delete all tasks.')) return;
-        try {
-            await api.delete(`/projects/${id}`);
-            navigate('/projects');
-        } catch (err) {
-            alert('Failed to delete project');
-        }
-    };
-
-    if (loading) return <Layout>Loading...</Layout>;
-    if (!project) return <Layout>Project not found</Layout>;
+    if (loading) return <Layout><div>Loading...</div></Layout>;
+    if (error) return <Layout><div style={{color: 'red'}}>{error}</div></Layout>;
 
     return (
         <Layout>
-            <div style={{ borderBottom: '1px solid #eee', paddingBottom: '20px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <h1>{project.name}</h1>
-                    {(user.role === 'tenant_admin' || project.created_by === user.id) && (
-                        <button onClick={handleDeleteProject} style={{ backgroundColor: '#ff4444', color: 'white' }}>
-                            Delete Project
-                        </button>
-                    )}
+            <button onClick={() => navigate('/projects')} style={{ marginBottom: '20px', padding: '5px 10px', cursor: 'pointer' }}>
+                ← Back to Projects
+            </button>
+
+            {project && (
+                <div style={{ marginBottom: '30px' }}>
+                    <h2>{project.name}</h2>
+                    <p style={{ color: '#666' }}>{project.description}</p>
+                    <span style={{ 
+                        background: project.status === 'active' ? '#d4edda' : '#f8d7da', 
+                        padding: '5px 10px', 
+                        borderRadius: '5px',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                    }}>
+                        {project.status.toUpperCase()}
+                    </span>
                 </div>
-                <p>{project.description}</p>
-                <span style={{ fontWeight: 'bold' }}>Status: {project.status}</span>
-            </div>
+            )}
 
             <h3>Tasks</h3>
+            
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+                {tasks.length === 0 ? <p style={{ fontStyle: 'italic', color: '#888' }}>No tasks yet.</p> : tasks.map(task => (
+                    <li key={task.id} style={{ 
+                        border: '1px solid #eee', 
+                        padding: '15px', 
+                        marginBottom: '10px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}>
+                        <div>
+                            <strong>{task.title}</strong>
+                            <span style={{ 
+                                marginLeft: '10px', 
+                                fontSize: '11px',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                background: task.priority === 'high' ? '#ffeeba' : '#e2e3e5',
+                                color: task.priority === 'high' ? '#856404' : '#383d41'
+                            }}>
+                                {task.priority.toUpperCase()}
+                            </span>
+                        </div>
+                        <button onClick={() => deleteTask(task.id)} style={{ color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}>
+                            Delete
+                        </button>
+                    </li>
+                ))}
+            </ul>
 
-            {/* Add Task Form */}
-            <form onSubmit={handleAddTask} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                <input
-                    placeholder="New Task Title"
+            {/* Add Task Form - FIXED STYLE */}
+            <div style={{ 
+                marginTop: '30px', 
+                display: 'flex', 
+                gap: '10px', 
+                alignItems: 'center',
+                background: '#f8f9fa',
+                padding: '15px',
+                borderRadius: '8px'
+            }}>
+                <input 
+                    type="text" 
+                    placeholder="New Task Title..." 
                     value={newTask.title}
                     onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                    required
-                    style={{ flex: 1 }}
+                    // THE UI FIX: flex: 1 makes it expand to fill space
+                    style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
-                <select value={newTask.priority} onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                <select 
+                    value={newTask.priority}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                    style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc', background: 'white' }}
+                >
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
                 </select>
-                <button type="submit">Add Task</button>
-            </form>
-
-            {/* Task List */}
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                    <tr style={{ textAlign: 'left', backgroundColor: '#f9f9f9' }}>
-                        <th style={{ padding: '10px' }}>Title</th>
-                        <th style={{ padding: '10px' }}>Priority</th>
-                        <th style={{ padding: '10px' }}>Assignee</th>
-                        <th style={{ padding: '10px' }}>Status</th>
-                        <th style={{ padding: '10px' }}>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {tasks.map(task => (
-                        <tr key={task.id} style={{ borderBottom: '1px solid #eee' }}>
-                            <td style={{ padding: '10px' }}>{task.title}</td>
-                            <td style={{ padding: '10px' }}>{task.priority}</td>
-                            <td style={{ padding: '10px' }}>{task.assignee_name || 'Unassigned'}</td>
-                            <td style={{ padding: '10px' }}>
-                                <span style={{
-                                    padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
-                                    backgroundColor: task.status === 'completed' ? '#d4edda' : '#fff3cd'
-                                }}>
-                                    {task.status}
-                                </span>
-                            </td>
-                            <td style={{ padding: '10px' }}>
-                                {task.status !== 'completed' && (
-                                    <button onClick={() => updateStatus(task.id, 'completed')} style={{ fontSize: '12px' }}>
-                                        Mark Complete
-                                    </button>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                <button 
+                    onClick={addTask}
+                    style={{ 
+                        padding: '10px 20px', 
+                        backgroundColor: '#007bff', 
+                        color: 'white', 
+                        border: 'none', 
+                        borderRadius: '4px', 
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    Add Task
+                </button>
+            </div>
         </Layout>
     );
 };
