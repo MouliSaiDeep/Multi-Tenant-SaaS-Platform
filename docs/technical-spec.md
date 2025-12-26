@@ -109,7 +109,7 @@ FRONTEND_URL=http://localhost:3000
 1. **Clone the repository**
 ```bash
 git clone <repo-url>
-cd multi-tenant-saas
+cd Multi-Tenant-SaaS-Platform
 ```
 
 2. **Install backend dependencies**
