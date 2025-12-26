@@ -56,57 +56,66 @@ exports.registerTenant = async (req, res) => {
   }
 };
 
-// API 2: Login
+// API 2: Login (Updated for Super Admin Support)
 exports.login = async (req, res) => {
   const { email, password, subdomain } = req.body;
-  const cleanSubdomain = subdomain ? subdomain.trim().toLowerCase() : '';
   const cleanEmail = email ? email.trim().toLowerCase() : '';
+  const cleanSubdomain = subdomain ? subdomain.trim().toLowerCase() : '';
 
   try {
-    // 1. Find Tenant
-    // USE db.query HERE (Not client.query)
-    const tenantRes = await db.query('SELECT id, status FROM tenants WHERE subdomain = $1', [cleanSubdomain]);
-
-    if (tenantRes.rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Tenant not found' });
-    }
-    const tenant = tenantRes.rows[0];
-
-    if (tenant.status === 'suspended') {
-      return res.status(403).json({ success: false, message: 'Tenant account suspended' });
-    }
-
-    // 2. Find User
-    // USE db.query HERE
-    // Note: Checking for 'password' column. If your DB uses 'password_hash', change this word.
-    const userRes = await db.query(
-      'SELECT * FROM users WHERE email = $1 AND tenant_id = $2',
-      [cleanEmail, tenant.id]
+    // ---------------------------------------------------
+    // CHECK 1: Is this a Super Admin? (No Subdomain needed)
+    // ---------------------------------------------------
+    const superCheck = await db.query(
+      'SELECT * FROM users WHERE email = $1 AND role = $2',
+      [cleanEmail, 'super_admin']
     );
 
-    if (userRes.rows.length === 0) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    if (superCheck.rows.length > 0) {
+      const superUser = superCheck.rows[0];
+      // Verify Password
+      const dbPassword = superUser.password_hash || superUser.password;
+      const isMatch = await bcrypt.compare(password, dbPassword);
+
+      if (isMatch) {
+        const token = jwt.sign(
+          { userId: superUser.id, tenantId: null, role: 'super_admin' },
+          process.env.JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        return res.json({ success: true, data: { token, user: superUser } });
+      }
     }
+
+    // ---------------------------------------------------
+    // CHECK 2: Regular Tenant Login (Subdomain Required)
+    // ---------------------------------------------------
+    if (!cleanSubdomain) {
+      return res.status(400).json({ success: false, message: 'Subdomain required for tenant login' });
+    }
+
+    const tenantRes = await db.query('SELECT id, status FROM tenants WHERE subdomain = $1', [cleanSubdomain]);
+    if (tenantRes.rows.length === 0) return res.status(404).json({ success: false, message: 'Tenant not found' });
+
+    const tenant = tenantRes.rows[0];
+    if (tenant.status === 'suspended') return res.status(403).json({ success: false, message: 'Tenant suspended' });
+
+    const userRes = await db.query('SELECT * FROM users WHERE email = $1 AND tenant_id = $2', [cleanEmail, tenant.id]);
+    if (userRes.rows.length === 0) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     const user = userRes.rows[0];
+    const dbPass = user.password_hash || user.password;
+    const isMatch = await bcrypt.compare(password, dbPass);
 
-    // 3. Verify Password
-    // Use user.password or user.password_hash depending on your DB column
-    const dbPassword = user.password || user.password_hash;
-    const isMatch = await bcrypt.compare(password, dbPassword);
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-
-    // 4. Generate Token
     const token = jwt.sign(
       { userId: user.id, tenantId: user.tenant_id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    res.status(200).json({ success: true, data: { token, user } });
+    res.json({ success: true, data: { token, user } });
 
   } catch (error) {
     console.error("Login Error:", error);

@@ -76,7 +76,7 @@ This API adheres to REST principles. All responses follow the format:
 | Method | Endpoint | Auth Required | Roles Allowed | Description |
 |------|---------|---------------|---------------|-------------|
 | GET | /api/projects/:projectId/tasks | Yes | All Roles | List tasks in project |
-| POST | /api/projects/:projectId/tasks | Yes | All Roles | Create task |
+| POST | /api/tasks | Yes | All Roles | Create task |
 | PUT | /api/tasks/:taskId | Yes | All Roles | Update task details |
 | PATCH | /api/tasks/:taskId/status | Yes | All Roles | Update task status only |
 
