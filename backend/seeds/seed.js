@@ -19,7 +19,7 @@ async function seed() {
     console.log('Tables truncated.');
 
     const salt = await bcrypt.genSalt(10);
-    
+
     // 1. Super Admin 
     const superAdminPass = await bcrypt.hash('Admin@123', salt);
     await client.query(`
@@ -48,26 +48,36 @@ async function seed() {
       INSERT INTO users (tenant_id, email, password_hash, full_name, role)
       VALUES ($1, $2, $3, $4, $5) RETURNING id
     `, [tenantId, 'user1@demo.com', userPass, 'User One', 'user']);
-    
+
     const user2 = await client.query(`
       INSERT INTO users (tenant_id, email, password_hash, full_name, role)
       VALUES ($1, $2, $3, $4, $5) RETURNING id
     `, [tenantId, 'user2@demo.com', userPass, 'User Two', 'user']);
 
-    // 5. Sample Projects 
-    const projectRes = await client.query(`
+    // 5. Sample Projects (Requirement: 2 Projects)
+    const project1 = await client.query(`
       INSERT INTO projects (tenant_id, name, description, status, created_by)
-      VALUES ($1, $2, $3, $4, $5) RETURNING id
-    `, [tenantId, 'Project Alpha', 'Main website redesign', 'active', adminId]);
-    const projectId = projectRes.rows[0].id;
+      VALUES ($1, 'Project Alpha', 'Main website redesign', 'active', $2) RETURNING id
+    `, [tenantId, adminId]);
 
-    // 6. Sample Tasks 
+    const project2 = await client.query(`
+      INSERT INTO projects (tenant_id, name, description, status, created_by)
+      VALUES ($1, 'Project Beta', 'Mobile App Development', 'active', $2) RETURNING id
+    `, [tenantId, adminId]);
+
+    const p1Id = project1.rows[0].id;
+    const p2Id = project2.rows[0].id;
+
+    // 6. Sample Tasks (Requirement: 5 Tasks distributed)
     await client.query(`
       INSERT INTO tasks (project_id, tenant_id, title, status, priority, assigned_to)
       VALUES 
-      ($1, $2, 'Design Database', 'completed', 'high', $3),
-      ($1, $2, 'Create API Endpoints', 'in_progress', 'high', $4)
-    `, [projectId, tenantId, adminId, user1.rows[0].id]);
+      ($1, $3, 'Design Database', 'completed', 'high', $4),
+      ($1, $3, 'Create API Endpoints', 'in_progress', 'high', $5),
+      ($1, $3, 'Frontend Login Page', 'todo', 'medium', $4),
+      ($2, $3, 'Design App Icon', 'todo', 'low', $5),
+      ($2, $3, 'Setup Push Notifications', 'in_progress', 'high', $4)
+    `, [p1Id, p2Id, tenantId, user1.rows[0].id, user2.rows[0].id]);
 
     console.log('Seeding completed successfully.');
   } catch (err) {
