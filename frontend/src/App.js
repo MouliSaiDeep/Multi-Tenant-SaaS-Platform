@@ -7,6 +7,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import ProjectList from './pages/projects/ProjectList';
 import ProjectDetails from './pages/projects/ProjectDetails';
 import UserList from './pages/users/UserList';
+import TenantList from './pages/tenants/TenantList';
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = React.useContext(AuthContext);
@@ -37,6 +38,8 @@ function App() {
                     <Route path="/" element={<Navigate to="/dashboard" />} />
 
                     <Route path="/users" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
+
+                    <Route path="/tenants" element={<TenantList />} />
                 </Routes>
             </Router>
         </AuthProvider>
