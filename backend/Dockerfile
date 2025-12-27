@@ -1,19 +1,19 @@
-# Multi-stage build for Backend
-
 # Stage 1: Build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 
 # Stage 2: Production
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-# Install only production dependencies
-RUN npm ci --only=production
-# Copy source code from builder
+
+# Safe option: Install all deps so migrations work
+RUN npm ci 
+
+# Copy source code and config folders
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seeds ./seeds
@@ -21,5 +21,5 @@ COPY --from=builder /app/server.js .
 
 EXPOSE 5000
 
-# Start command handles migrations and seeds automatically 
-CMD ["node", "server.js"]
+# FIX: Run Migrations and Seeds before starting server
+CMD ["sh", "-c", "node src/utils/migrate.js && node seeds/seed.js && node server.js"]

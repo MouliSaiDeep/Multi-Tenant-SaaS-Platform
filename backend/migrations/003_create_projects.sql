@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_projects_tenant_id ON projects(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_projects_tenant_id ON projects(tenant_id);

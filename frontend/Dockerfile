@@ -1,8 +1,8 @@
 # Stage 1: Build React App
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 
 # Expose port 3000

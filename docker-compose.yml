@@ -10,11 +10,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432" # 
+      - "5432:5432" #
     volumes:
-      - db_data:/var/lib/postgresql/data # 
+      - db_data:/var/lib/postgresql/data #
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
     build: ./backend
     container_name: backend
     ports:
-      - "5000:5000" # 
+      - "5000:5000" #
     environment:
       - DB_HOST=database
       - DB_PORT=5432
@@ -32,24 +32,25 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - JWT_SECRET=development_secret_key_12345
-      - FRONTEND_URL=http://frontend:3000 # 
+      - FRONTEND_URL=http://frontend:3000 #
       - PORT=5000
     depends_on:
       database:
         condition: service_healthy
     command: sh -c "npm install && npm run migrate && npm run seed && npm run dev" #  Automatic startup
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"] # 
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   #  Frontend Service named 'frontend'
   frontend:
     build: ./frontend
     container_name: frontend
     ports:
-      - "3000:3000" # 
+      - "3000:3000" #
     environment:
       - REACT_APP_API_URL=http://localhost:5000/api # Browser accesses backend via localhost
     depends_on:
@@ -57,7 +58,7 @@ services:
         condition: service_healthy
     # For dev, we use npm start. For prod, we would build. 
     # Evaluation requires access at localhost:3000.
-    command: npm start 
+    command: npm start
 
 volumes:
   db_data:
