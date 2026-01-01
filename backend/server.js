@@ -1,15 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const authRoutes = require('./src/routes/authRoutes')
+
+// Import Routes
+const authRoutes = require('./src/routes/authRoutes');
 const projectRoutes = require('./src/routes/projectRoutes');
 const taskRoutes = require('./src/routes/taskRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const tenantUserRoutes = require('./src/routes/tenantUserRoutes');
-
-// const tenantRoutes = require('./src/routes/tenantRoutes'); // To be implemented
-// const userRoutes = require('./src/routes/userRoutes');     // To be implemented
-// const projectRoutes = require('./src/routes/projectRoutes'); // To be implemented
+const tenantRoutes = require('./src/routes/tenantRoutes'); // Fix Import
 
 const app = express();
 
@@ -22,13 +21,17 @@ app.use(cors({
   credentials: true
 }));
 
-// Routes
+// Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/tenants/:tenantId/users', tenantUserRoutes); // Mount nested route
-app.use('/api/tenants', require('./src/routes/tenantRoutes'));
+
+// Mount Tenant Routes
+app.use('/api/tenants', tenantRoutes); // Correctly mounted
+
+// Nested Routes (e.g. /api/tenants/:tenantId/users)
+app.use('/api/tenants/:tenantId/users', tenantUserRoutes);
 
 // Health Check 
 app.get('/api/health', async (req, res) => {

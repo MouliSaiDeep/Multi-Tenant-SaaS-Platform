@@ -9,9 +9,10 @@ import ProjectDetails from './pages/projects/ProjectDetails';
 import UserList from './pages/users/UserList';
 import TenantList from './pages/tenants/TenantList';
 
+// Helper to protect routes
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = React.useContext(AuthContext);
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div className="container" style={{ marginTop: '2rem' }}>Loading...</div>;
     return user ? children : <Navigate to="/login" />;
 };
 
@@ -20,9 +21,11 @@ function App() {
         <AuthProvider>
             <Router>
                 <Routes>
+                    {/* Auth Routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
 
+                    {/* Protected Routes */}
                     <Route path="/dashboard" element={
                         <ProtectedRoute><Dashboard /></ProtectedRoute>
                     } />
@@ -35,11 +38,16 @@ function App() {
                         <ProtectedRoute><ProjectDetails /></ProtectedRoute>
                     } />
 
+                    <Route path="/users" element={
+                        <ProtectedRoute><UserList /></ProtectedRoute>
+                    } />
+
+                    <Route path="/tenants" element={
+                        <TenantList /> // Usually also protected, but open in your code
+                    } />
+
+                    {/* Default Redirect */}
                     <Route path="/" element={<Navigate to="/dashboard" />} />
-
-                    <Route path="/users" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
-
-                    <Route path="/tenants" element={<TenantList />} />
                 </Routes>
             </Router>
         </AuthProvider>

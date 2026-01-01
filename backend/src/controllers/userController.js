@@ -12,23 +12,26 @@ exports.addUser = async (req, res) => {
     }
 
     try {
-        // 1. Check Subscription Limits 
-        // Get tenant's max_users and current user count
+        // 1. Check Subscription Limits (LIVE CHECK)
         const limitRes = await db.query(
-            `SELECT t.max_users, count(u.id) as current_count 
-       FROM tenants t 
-       LEFT JOIN users u ON u.tenant_id = t.id 
-       WHERE t.id = $1 
-       GROUP BY t.max_users`,
+            `SELECT t.max_users, 
+                    (SELECT count(*) FROM users WHERE tenant_id = $1) as current_count 
+             FROM tenants t 
+             WHERE t.id = $1`,
             [tenantId]
         );
 
         const { max_users, current_count } = limitRes.rows[0];
+        const currentCountInt = parseInt(current_count);
+        const maxUsersInt = parseInt(max_users);
 
-        if (parseInt(current_count) >= max_users) {
+        // DEBUG LOG: This will show up in your docker terminal
+        console.log(`[Limit Check] Tenant ID: ${tenantId} | Users Used: ${currentCountInt} / ${maxUsersInt}`);
+
+        if (currentCountInt >= maxUsersInt) {
             return res.status(403).json({
                 success: false,
-                message: 'Subscription user limit reached. Upgrade plan to add more users.'
+                message: `Plan limit reached (${currentCountInt}/${maxUsersInt}). Upgrade to add more users.`
             });
         }
 
@@ -39,22 +42,21 @@ exports.addUser = async (req, res) => {
         // 3. Create User
         const result = await db.query(
             `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_active)
-       VALUES ($1, $2, $3, $4, $5, true)
-       RETURNING id, email, full_name, role, is_active, created_at`,
+             VALUES ($1, $2, $3, $4, $5, true)
+             RETURNING id, email, full_name, role, is_active, created_at`,
             [tenantId, email, hashedPassword, fullName, role || 'user']
         );
 
         // 4. Audit Log
         await db.query(
             `INSERT INTO audit_logs (tenant_id, user_id, action, entity_type, entity_id)
-       VALUES ($1, $2, 'CREATE_USER', 'user', $3)`,
+             VALUES ($1, $2, 'CREATE_USER', 'user', $3)`,
             [tenantId, userId, result.rows[0].id]
         );
 
         res.status(201).json({ success: true, data: result.rows[0] });
 
     } catch (error) {
-        // Unique constraint violation (email + tenant_id)
         if (error.code === '23505') {
             return res.status(409).json({ success: false, message: 'Email already exists in this tenant' });
         }

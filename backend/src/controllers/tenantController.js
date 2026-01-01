@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-// API 1: List All Tenants (Super Admin) - FIXES YOUR ERROR
+// API 1: List All Tenants (Super Admin)
 exports.getAllTenants = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM tenants ORDER BY created_at DESC');
@@ -49,27 +49,28 @@ exports.updateTenant = async (req, res) => {
   }
 };
 
-// API 4: Upgrade Plan (Your Logic - Integrated)
+// API 4: Upgrade Plan (FIXED LIMITS)
 exports.upgradePlan = async (req, res) => {
   // Use tenantId from params (Super Admin updating) OR req.user (Tenant Admin updating)
   const tenantId = req.params.tenantId || req.user.tenantId;
   const { plan } = req.body;
 
+  // FIX: Updated limits to match your requirement
   const PLANS = {
     free: { max_users: 5, max_projects: 3 },
-    pro: { max_users: 20, max_projects: 10 },
-    enterprise: { max_users: 100, max_projects: 50 }
+    pro: { max_users: 25, max_projects: 15 },       // Corrected from 20/10 to 25/15
+    enterprise: { max_users: 100, max_projects: 50 } // Confirmed 100/50
   };
 
   if (!PLANS[plan]) {
-    return res.status(400).json({ success: false, message: 'Invalid plan selected' });
+    return res.status(400).json({ success: false, message: 'Invalid plan selected. Choose: free, pro, enterprise' });
   }
 
   try {
     const limits = PLANS[plan];
 
-    // Note: This query assumes you have 'max_users' and 'max_projects' columns. 
-    // If not, simply remove those parts from the UPDATE statement below.
+    // This updates the 'max_users' and 'max_projects' columns in your DB
+    // so the other controllers (user/project) can enforce them automatically.
     const result = await db.query(
       `UPDATE tenants 
        SET subscription_plan = $1, max_users = $2, max_projects = $3, updated_at = NOW()

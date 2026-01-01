@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Load user from token on startup
   useEffect(() => {
     const loadUser = async () => {
       const token = localStorage.getItem('token');
@@ -25,9 +26,9 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // FIX IS HERE: Added 'subdomain' as the 3rd argument
+  // LOGIN FUNCTION: Now accepts 'subdomain'
   const login = async (email, password, subdomain) => {
-    // We now send all 3 fields to the backend
+    // We send the subdomain to the backend so it knows which schema to check
     const { data } = await api.post('/auth/login', { email, password, subdomain });
 
     localStorage.setItem('token', data.data.token);

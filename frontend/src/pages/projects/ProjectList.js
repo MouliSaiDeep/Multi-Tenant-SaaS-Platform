@@ -18,9 +18,7 @@ const ProjectList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  useEffect(() => { fetchProjects(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -28,8 +26,7 @@ const ProjectList = () => {
       await api.post('/projects', newProject);
       setShowForm(false);
       setNewProject({ name: '', description: '' });
-      fetchProjects(); // Refresh list
-      setError('');
+      fetchProjects();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create project');
     }
@@ -37,46 +34,49 @@ const ProjectList = () => {
 
   return (
     <Layout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Projects</h2>
-        <button onClick={() => setShowForm(!showForm)}>
-            {showForm ? 'Cancel' : '+ New Project'}
+      <div className="flex-between mb-4">
+        <div>
+          <h1>Projects</h1>
+          <p className="text-muted">Manage your ongoing work</p>
+        </div>
+        <button onClick={() => setShowForm(!showForm)} className={`btn ${showForm ? 'btn-outline' : 'btn-primary'}`}>
+          {showForm ? 'Cancel' : '+ New Project'}
         </button>
       </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
       {showForm && (
-        <form onSubmit={handleCreate} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc' }}>
-          <div>
-            <input 
-              placeholder="Project Name" 
-              value={newProject.name} 
-              onChange={(e) => setNewProject({...newProject, name: e.target.value})} 
-              required 
-            />
-          </div>
-          <div style={{ marginTop: '10px' }}>
-            <textarea 
-              placeholder="Description" 
-              value={newProject.description} 
-              onChange={(e) => setNewProject({...newProject, description: e.target.value})} 
-            />
-          </div>
-          <button type="submit" style={{ marginTop: '10px' }}>Save Project</button>
-        </form>
+        <div className="card mb-4" style={{ maxWidth: '600px', borderLeft: '4px solid var(--primary)' }}>
+          <h3 style={{ marginBottom: '1rem' }}>Create New Project</h3>
+          {error && <p style={{ color: 'var(--danger)', fontSize: '0.9rem' }}>{error}</p>}
+          <form onSubmit={handleCreate}>
+            <div className="form-group">
+              <input placeholder="Project Name" value={newProject.name} onChange={(e) => setNewProject({ ...newProject, name: e.target.value })} required autoFocus />
+            </div>
+            <div className="form-group">
+              <textarea placeholder="Description (Optional)" rows="2" value={newProject.description} onChange={(e) => setNewProject({ ...newProject, description: e.target.value })} />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" className="btn btn-primary">Save Project</button>
+            </div>
+          </form>
+        </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+      <div className="grid-3">
         {projects.map(project => (
-          <div key={project.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '5px' }}>
-            <h3>{project.name}</h3>
-            <p>{project.description}</p>
-            <span style={{ backgroundColor: '#eee', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>
-              {project.status}
-            </span>
-            <div style={{ marginTop: '10px' }}>
-                <Link to={`/projects/${project.id}`}>View Details</Link>
+          <div key={project.id} className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{project.name}</h3>
+              <span className={`badge ${project.status === 'active' ? 'badge-green' : 'badge-gray'}`}>
+                {project.status}
+              </span>
+            </div>
+            <p className="text-muted" style={{ fontSize: '0.9rem', flex: 1 }}>{project.description || 'No description provided.'}</p>
+
+            <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+              <Link to={`/projects/${project.id}`} style={{ fontWeight: '600', fontSize: '0.9rem' }}>
+                View Details →
+              </Link>
             </div>
           </div>
         ))}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import Layout from '../../components/common/Layout';
 
 const TenantList = () => {
   const [tenants, setTenants] = useState([]);
@@ -10,45 +11,48 @@ const TenantList = () => {
       try {
         const response = await api.get('/tenants');
         setTenants(response.data.data);
-      } catch (error) {
-        alert('Failed to load tenants');
-      } finally {
-        setLoading(false);
-      }
+      } catch (error) { alert('Failed to load tenants'); }
+      finally { setLoading(false); }
     };
     fetchTenants();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Layout><div className="container mt-4">Loading...</div></Layout>;
 
   return (
-    <div className="container mt-4">
-      <h2>Registered Tenants (Super Admin)</h2>
-      <table className="table table-bordered table-hover mt-3">
-        <thead className="table-dark">
-          <tr>
-            <th>Name</th>
-            <th>Subdomain</th>
-            <th>Plan</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tenants.map((tenant) => (
-            <tr key={tenant.id}>
-              <td>{tenant.name}</td>
-              <td>{tenant.subdomain}</td>
-              <td>
-                <span className={`badge bg-${tenant.subscription_plan === 'enterprise' ? 'primary' : 'secondary'}`}>
-                  {tenant.subscription_plan}
-                </span>
-              </td>
-              <td>{tenant.status}</td>
+    <Layout>
+      <div className="mb-4">
+        <h1>Registered Tenants</h1>
+        <p className="text-muted">Super Admin Overview</p>
+      </div>
+
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Organization</th>
+              <th>Subdomain</th>
+              <th>Subscription</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {tenants.map((tenant) => (
+              <tr key={tenant.id}>
+                <td style={{ fontWeight: 'bold' }}>{tenant.name}</td>
+                <td style={{ color: 'var(--primary)' }}>{tenant.subdomain}.localhost</td>
+                <td>
+                  <span className={`badge ${tenant.subscription_plan === 'enterprise' ? 'badge-blue' : 'badge-gray'}`}>
+                    {tenant.subscription_plan}
+                  </span>
+                </td>
+                <td><span className="badge badge-green">{tenant.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Layout>
   );
 };
 

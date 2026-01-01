@@ -6,16 +6,17 @@ const authMiddleware = require('../middleware/authMiddleware');
 // Protect all routes
 router.use(authMiddleware);
 
-// 1. List All Tenants (Matches GET /api/tenants) -> FIXES YOUR ERROR
+// 1. List All Tenants (Super Admin)
 router.get('/', tenantController.getAllTenants);
 
-// 2. Get Specific Tenant
+// 2. Upgrade Subscription Plan (Self-Service for Tenant Admins)
+// MATCHES FRONTEND: POST /api/tenants/upgrade
+router.post('/upgrade', tenantController.upgradePlan);
+
+// 3. Get Specific Tenant Details
 router.get('/:tenantId', tenantController.getTenantById);
 
-// 3. Update Tenant Info
+// 4. Update Tenant Info (Super Admin)
 router.put('/:tenantId', tenantController.updateTenant);
-
-// 4. Upgrade Plan Route (Matches POST /api/tenants/:tenantId/upgrade)
-router.post('/:tenantId/upgrade', tenantController.upgradePlan);
 
 module.exports = router;
