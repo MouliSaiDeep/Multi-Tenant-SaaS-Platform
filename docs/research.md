@@ -2,7 +2,7 @@
 
 ## 1. Multi-Tenancy Analysis
 
-Multi-tenancy is a software architecture where a single instance of software runs on a server and serves multiple tenants. A tenant is a group of users who share a common access with specific privileges to the software instance. In the context of this SaaS application, tenants are distinct organizations using the Project Management platform.
+Multi-tenancy is a software architecture where a single instance of software runs on a server and serves multiple tenants. A tenant is a group of users who share a common access with specific privileges to the software instance . In the context of this SaaS application, tenants are distinct organizations using the Project Management platform.
 
 We analyzed three primary architectural patterns for implementing multi-tenancy in a relational database environment.
 
@@ -105,18 +105,16 @@ We selected **Docker** for containerization.
 
 ## 3. Security Considerations
 
-Multi-tenant applications face unique security challenges because multiple clients' data resides in the same system. We will implement the following measures:
+Multi-tenant applications face unique security challenges because multiple clients' data resides in the same system . We will implement the following measures:
 
 ### 1. Security Measures for Multi-Tenant Systems
 1.  **Logical Data Isolation:** Preventing cross-tenant data access is the highest priority. We will strictly enforce `tenant_id` checks on every database query.
 2.  **Role-Based Access Control (RBAC):** We will distinguish between `super_admin`, `tenant_admin`, and `user`. API endpoints will have middleware guards (e.g., `authorize('tenant_admin')`) to ensure users cannot perform actions outside their privilege level.
 3.  **Input Validation & Sanitization:** All incoming data will be validated against strict schemas (e.g., ensuring email formats, checking UUID validity) to prevent injection attacks.
-4.  **Rate Limiting:** To prevent a single tenant from degrading the service for others (DoS), we will implement API rate limiting.
-5.  **Secure Headers:** We will use Helmet.js to set secure HTTP headers (HSTS, X-Frame-Options, X-XSS-Protection) to prevent common browser-based attacks.
 
 ### 2. Data Isolation Strategy
 Since we are using a Shared Schema approach, isolation is enforced at the application layer (Backend).
-* **Middleware:** We will implement a `tenantIsolation` middleware that runs after authentication. It extracts the `tenantId` from the decrypted JWT.
+* **Middleware:** We will implement a `tenantMiddleware` that runs after authentication. It extracts the `tenantId` from the decrypted JWT.
 * **Query Scope:** This `tenantId` is injected into the request object (`req.tenantId`). All controller functions must use this ID in their SQL `WHERE` clauses (e.g., `WHERE project.id = :id AND project.tenant_id = :tenantId`).
 * **Defense in Depth:** We will never trust a `tenantId` sent in the request body (e.g., JSON payload) for identification purposes; we only trust the ID signed within the JWT.
 
@@ -135,4 +133,4 @@ We will strictly avoid storing plain-text passwords.
 ### 5. API Security Measures
 * **HTTPS:** In production, all traffic must be encrypted via TLS/SSL.
 * **CORS:** Cross-Origin Resource Sharing will be configured to only allow requests from the specific frontend domain (or the frontend Docker service).
-* **Audit Logging:** We will maintain an immutable `audit_logs` table. Every critical state change (creating a user, deleting a project) will record the `user_id`, `tenant_id`, `action`, `ip_address`, and `timestamp`. This provides a trail for forensic analysis if a security incident occurs.
+* **Audit Logging:** We will maintain an immutable `audit_logs` table. Every critical state change (creating a user, deleting a project) will record the `user_id`, `tenant_id`, `action`, `entity_type`, and `timestamp`. This provides a trail for forensic analysis if a security incident occurs.

@@ -43,6 +43,7 @@
 * **FR-005:** The system shall allow Super Admins to view a paginated list of all tenants, including their status and plan type.
 * **FR-006:** The system shall allow Tenant Admins to view their own tenant's details and statistics (user count, project count).
 * **FR-007:** The system shall allow Tenant Admins to update their organization's display name.
+* **FR-007-B:** The system shall allow Tenant Admins to **upgrade their subscription plan** (e.g., Free to Pro) to increase resource limits.
 
 ### User Management Module
 * **FR-008:** The system shall allow Tenant Admins to create new user accounts within their tenant.
@@ -57,9 +58,9 @@
 * **FR-015:** The system shall allow Tenant Admins and Project Creators to soft-delete or archive projects.
 
 ### Task Management Module
-* **FR-016:** The system shall allow users to create tasks within a specific project.
+* **FR-016:** The system shall allow users to create tasks with a title, priority, **due date**, and assignment within a specific project.
 * **FR-017:** The system shall allow users to assign tasks to other users who belong to the **same** tenant.
-* **FR-018:** The system shall allow users to update the status of a task (Todo -> In Progress -> Completed).
+* **FR-018:** The system shall allow users to update the status of a task (Todo -> In Progress -> Completed) and toggle quick status updates.
 * **FR-019:** The system shall record an entry in the `audit_logs` table for every User creation, Project deletion, and Task update.
 
 ---

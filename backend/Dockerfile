@@ -19,6 +19,8 @@ COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/seeds ./seeds
 COPY --from=builder /app/server.js .
 
+COPY --from=builder /app/tests ./tests
+
 EXPOSE 5000
 
 # FIX: Run Migrations and Seeds before starting server

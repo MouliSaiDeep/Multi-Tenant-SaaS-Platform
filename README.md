@@ -23,9 +23,9 @@ The **Multi-Tenant SaaS Platform** is a containerized project management tool de
 - **Role-Based Access Control (RBAC):** Super Admin, Tenant Admin, and Standard User roles
 - **Secure Authentication:** Stateless JWT authentication with password hashing using `bcrypt`
 - **Project Management:** Create, update, and archive projects within a tenant
-- **Task Management:** Task tracking with priority levels and user assignments
+- **Task Management:** Task tracking with priority levels, **due dates**, and user assignments
 - **User Management:** Tenant Admins can manage team members and roles
-- **Plan Enforcement:** Limits on users and projects based on subscription tiers
+- **Subscription Management:** Upgrade plans (Free vs Pro) with automatic limit enforcement on users and projects
 - **Automated Seeding:** Scripts to populate demo tenants and initial data
 - **Dockerized Deployment:** One-command setup for Frontend, Backend, and Database
 
@@ -67,17 +67,17 @@ The system follows a **3-tier architecture**:
 
 All environment variables are injected automatically via `docker-compose.yml`.
 
-| Variable | Description |
-|--------|-------------|
-| DB_HOST | Database container hostname |
-| DB_PORT | PostgreSQL port |
-| DB_NAME | Application database |
-| DB_USER | Database username |
-| DB_PASSWORD | Database password |
-| JWT_SECRET | JWT signing secret |
-| JWT_EXPIRES_IN | Token validity |
-| PORT | Backend API port |
-| FRONTEND_URL | Frontend origin for CORS |
+| Variable       | Description                 |
+| -------------- | --------------------------- |
+| DB_HOST        | Database container hostname |
+| DB_PORT        | PostgreSQL port             |
+| DB_NAME        | Application database        |
+| DB_USER        | Database username           |
+| DB_PASSWORD    | Database password           |
+| JWT_SECRET     | JWT signing secret          |
+| JWT_EXPIRES_IN | Token validity              |
+| PORT           | Backend API port            |
+| FRONTEND_URL   | Frontend origin for CORS    |
 
 ---
 
@@ -96,8 +96,6 @@ All environment variables are injected automatically via `docker-compose.yml`.
 git clone https://github.com/MouliSaiDeep/Multi-Tenant-SaaS-Platform
 cd "Multi-Tenant SaaS Platform"
 ```
-
----
 
 ### Step 2: Start the Application
 
@@ -118,9 +116,6 @@ Execute database setup scripts inside the backend container:
 
 ```bash
 docker exec -it backend npm run migrate
-```
-
-```bash
 docker exec -it backend npm run seed
 ```
 
@@ -130,33 +125,42 @@ docker exec -it backend npm run seed
 
 ### Access the Application
 
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:5000
+- **Frontend:** http://localhost:3000  
+- **Backend API:** http://localhost:5000  
 
 ---
 
-### Login Credentials
+### Run Automated Tests
 
-#### Super Admin (Platform Owner)
+The project includes integration tests for Authentication and Project workflows.
 
-- **Email:** superadmin@system.com
-- **Password:** Admin@123
-- **Subdomain:** (Leave blank)
+```bash
+docker exec -it backend npm test
+```
 
-#### Tenant Admin (Demo Company)
+---
 
-- **Email:** admin@demo.com
-- **Password:** Demo@123
+## 🔐 Login Credentials
+
+### Super Admin (Platform Owner)
+- **Email:** superadmin@system.com  
+- **Password:** Admin@123  
+- **Subdomain:** *(Leave blank)*
+
+### Tenant Admin (Demo Company)
+- **Email:** admin@demo.com  
+- **Password:** Demo@123  
 - **Subdomain:** demo
 
 ---
 
 ## 📂 Project Structure
 
-```plaintext
+```text
 ├── backend/
 │   ├── migrations/
 │   ├── seeds/
+│   ├── tests/
 │   └── src/
 ├── frontend/
 ├── docker-compose.yml
@@ -173,7 +177,7 @@ docker exec -it backend npm run seed
 
 ### Tenants
 - `GET /api/tenants`
-- `POST /api/tenants/:id/upgrade`
+- `POST /api/tenants/upgrade`
 
 ### Projects
 - `GET /api/projects`
@@ -187,7 +191,7 @@ docker exec -it backend npm run seed
 
 ## 🔒 Security Measures
 
-- Password hashing using `bcrypt`
+- Password hashing using bcrypt
 - Stateless authentication with JWT
 - Strict tenant-based query scoping
 - CORS restricted to frontend container
@@ -195,5 +199,4 @@ docker exec -it backend npm run seed
 ---
 
 ## 🎥 Demo Video
-
-[YouTube Link Here]
+https://youtu.be/CqFxzihN6ow

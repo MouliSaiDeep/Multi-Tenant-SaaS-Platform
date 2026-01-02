@@ -9,7 +9,10 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'postgres',
 });
 
-// Helper to query DB
 const query = (text, params) => pool.query(text, params);
 
-module.exports = { query, pool };
+module.exports = { 
+  query, 
+  pool,
+  end: () => pool.end() 
+};

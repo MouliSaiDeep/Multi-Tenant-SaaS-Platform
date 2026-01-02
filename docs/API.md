@@ -35,15 +35,13 @@ Authenticates a user and returns a JWT token.
     }
     ```
 * **Response:** `200 OK`
-    ```json
-    {
-      "success": true,
-      "data": {
-        "token": "eyJhbGciOiJIUzI1NiIsIn...",
-        "user": { ... }
-      }
-    }
-    ```
+
+### Logout
+Invalidates the user session (Client-side token removal recommended).
+* **Method:** `POST`
+* **Endpoint:** `/auth/logout`
+* **Auth Required:** Yes
+* **Response:** `200 OK`
 
 ### Get Current User
 Retrieves details of the currently logged-in user and their tenant.
@@ -62,13 +60,32 @@ Lists all registered tenants (Super Admin only).
 * **Method:** `GET`
 * **Endpoint:** `/tenants`
 * **Auth Required:** Yes (Super Admin)
-* **Auth Type:** Bearer Token
+* **Response:** `200 OK`
+
+### Upgrade Subscription
+Updates the subscription plan for the current tenant.
+* **Method:** `POST`
+* **Endpoint:** `/tenants/upgrade`
+* **Auth Required:** Yes (Tenant Admin)
+* **Body:**
+    ```json
+    {
+      "plan": "pro"
+    }
+    ```
 * **Response:** `200 OK`
 
 ### Get Tenant Details
 * **Method:** `GET`
 * **Endpoint:** `/tenants/:id`
 * **Auth Required:** Yes
+* **Response:** `200 OK`
+
+### Update Tenant Details
+* **Method:** `PUT`
+* **Endpoint:** `/tenants/:id`
+* **Auth Required:** Yes (Super Admin / Tenant Admin)
+* **Body:** `{"tenantName": "New Name", "status": "active"}`
 * **Response:** `200 OK`
 
 ---
@@ -99,10 +116,17 @@ Adds a new user to the organization.
 * **Response:** `201 Created`
 
 ### Update User
+Updates user details including their active status.
 * **Method:** `PUT`
 * **Endpoint:** `/users/:id`
 * **Auth Required:** Yes (Tenant Admin)
-* **Body:** `{"fullName": "Updated Name", "role": "tenant_admin"}`
+* **Body:** ```json
+    {
+      "fullName": "Updated Name", 
+      "role": "tenant_admin",
+      "isActive": true
+    }
+    ```
 * **Response:** `200 OK`
 
 ### Delete User
@@ -177,13 +201,14 @@ Retrieves all tasks associated with a specific project.
       "title": "Fix Login Bug",
       "description": "Login fails on mobile",
       "priority": "high",
-      "assignedTo": "uuid-of-user"
+      "assignedTo": "uuid-of-user",
+      "dueDate": "2026-12-31"
     }
     ```
 * **Response:** `201 Created`
 
 ### Update Task Status
-Quickly update status (e.g., dragging on a kanban board).
+Quickly update status (e.g., used by the checkmark button).
 * **Method:** `PATCH`
 * **Endpoint:** `/tasks/:id/status`
 * **Auth Required:** Yes
@@ -191,11 +216,18 @@ Quickly update status (e.g., dragging on a kanban board).
 * **Response:** `200 OK`
 
 ### Update Task Details
-Update general task info.
+Update all task info including due date.
 * **Method:** `PUT`
 * **Endpoint:** `/tasks/:id`
 * **Auth Required:** Yes
-* **Body:** `{"title": "New Title", "priority": "low"}`
+* **Body:** ```json
+    {
+      "title": "New Title", 
+      "priority": "low",
+      "dueDate": "2026-12-31",
+      "assignedTo": "uuid-of-user"
+    }
+    ```
 * **Response:** `200 OK`
 
 ### Delete Task

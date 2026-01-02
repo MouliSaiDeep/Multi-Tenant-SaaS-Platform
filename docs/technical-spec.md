@@ -2,11 +2,14 @@
 
 ## 1. Project Structure
 
-This project follows a monorepo-style structure containing both backend and frontend services, along with documentation and configuration files.
+This project follows a **monorepo-style structure** containing both backend and frontend services, along with documentation and configuration files.
 
-### 1.1 Backend Structure (`/backend`)
+---
 
-The backend is built with Node.js and Express, following a layered architecture (Controller-Service-Model pattern).
+## 1.1 Backend Structure (`/backend`)
+
+The backend is built with **Node.js and Express**, following a **layered architecture**  
+(**Controller → Service → Model pattern**).
 
 ```text
 backend/
@@ -26,17 +29,25 @@ backend/
 └── tests/                     # Unit and integration tests
 ```
 
-**Key Folders:**
+### Key Folders
 
-- **middleware/**: Critical for security. Contains `authMiddleware` (JWT verification) and `tenantMiddleware` (injects `tenant_id` into queries).
-- **migrations/**: Raw SQL files to create the database schema. These run automatically on container startup.
-- **controllers/**: Handles the HTTP request lifecycle. All 19 API endpoints map to functions here.
+- **middleware/**  
+  Critical for security. Contains:
+  - `authMiddleware` (JWT verification)
+  - `tenantMiddleware` (injects `tenant_id` into queries)
+
+- **migrations/**  
+  Raw SQL files used to create and evolve the database schema.
+
+- **controllers/**  
+  Handles the HTTP request lifecycle.  
+  All **23 API endpoints** map directly to functions here.
 
 ---
 
-### 1.2 Frontend Structure (`/frontend`)
+## 1.2 Frontend Structure (`/frontend`)
 
-The frontend is a React application created using Create React App or Vite.
+The frontend is a **React application** created using **Create React App (CRA)**.
 
 ```text
 frontend/
@@ -45,11 +56,11 @@ frontend/
 ├── public/                    # Static assets (favicon, index.html)
 └── src/
     ├── components/            # Reusable UI components
-    │   ├── common/            # Navbar, Sidebar, etc.
+    │   ├── common/            # Navbar, Sidebar, Layout
     │   └── domain/            # ProjectCard, UserTable, etc.
     ├── pages/                 # Route-based pages
     │   ├── auth/              # Login, Register
-    │   ├── dashboard/         # Main dashboard
+    │   ├── dashboard/         # Main dashboard (Stats, Quick actions)
     │   ├── projects/          # Project list & details
     │   └── users/             # User management
     ├── context/               # Global state (AuthContext)
@@ -59,122 +70,133 @@ frontend/
     └── index.js               # Entry point
 ```
 
-**Key Folders:**
+### Key Folders
 
-- **pages/**: Contains six main pages — Registration, Login, Dashboard, Projects List, Project Details, Users List.
-- **services/**: Centralized API calls with Axios interceptors to attach JWT tokens.
-- **context/**: Manages authentication state and route protection.
+- **pages/**  
+  Contains the main views including:
+  - Dashboard grid
+  - Project details with task management
 
----
+- **services/**  
+  Centralized API calls using Axios with interceptors to attach JWT tokens.
 
-## 2. Development Setup Guide
-
-### 2.1 Prerequisites
-
-- Node.js v16.x or higher  
-- npm v8.x or higher  
-- Docker Desktop (latest version — mandatory for evaluation)  
-- PostgreSQL v14+ (if running without Docker)
+- **context/**  
+  Manages authentication state and route protection.
 
 ---
 
-### 2.2 Environment Variables
-
-Create a `.env` file inside the `backend/` directory based on `.env.example`.
-
-```env
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=saas_db
-DB_USER=postgres
-DB_PASSWORD=postgres
-
-# Authentication
-JWT_SECRET=super_secret_key_minimum_32_characters
-JWT_EXPIRES_IN=24h
-
-# Server
-PORT=5000
-NODE_ENV=development
-
-# Frontend Integration
-FRONTEND_URL=http://localhost:3000
-```
+## 2. Execution & Deployment Guide
 
 ---
 
-### 2.3 Installation Steps
+## 2.1 Prerequisites
 
-1. **Clone the repository**
-```bash
-git clone <repo-url>
-cd Multi-Tenant-SaaS-Platform
-```
-
-2. **Install backend dependencies**
-```bash
-cd backend
-npm install
-```
-
-3. **Install frontend dependencies**
-```bash
-cd ../frontend
-npm install
-```
+- **Docker Desktop** (Latest version) — *Required for evaluation*
+- **Git**
 
 ---
 
-### 2.4 Run Locally (Without Docker)
+## 2.2 Environment Variables
 
-1. **Start PostgreSQL**  
-   Create a database named `saas_db`.
+The project uses a `.env` file for configuration.
 
-2. **Run migrations and seeds**
+- **Docker:** Environment variables are automatically set in `docker-compose.yml`
+- **Manual Run:** Create a `.env` file in `backend/` mirroring `.env.example`
+
+### Critical Note on `DB_HOST`
+
+- **Running via Docker:**  
+  `DB_HOST=db` (Docker service name)
+
+- **Running Manually:**  
+  `DB_HOST=localhost`
+
+---
+
+## 2.3 ✅ Recommended Method: Docker Compose
+
+This is the **most robust and recommended approach**.  
+It orchestrates the **Database**, **Backend**, and **Frontend** containers and handles networking automatically.
+
+### Step 1: Build and Start Services
+
+Use the `--build` flag to ensure recent code changes are compiled.
+
 ```bash
-cd backend
-npm run migrate
-npm run seed
+docker-compose up -d --build
 ```
 
-3. **Start backend server**
+### Step 2: Initialize Database
+
+The database container starts empty. Run migrations and seeds inside the backend container.
+
 ```bash
-npm run dev
-# http://localhost:5000
+# Apply Database Schema
+docker exec -it backend npm run migrate
+
+# Populate with Demo Data (Super Admin & Demo Tenant)
+docker exec -it backend npm run seed
 ```
 
-4. **Start frontend**
+### Step 3: Access Application
+
+- **Frontend:** http://localhost:3000  
+- **Backend API:** http://localhost:5000  
+- **Database:**  
+  - Port: `5432`  
+  - User: `postgres`  
+  - Password: `postgres`
+
+---
+
+## 2.4 Alternative Method: Local Development (Manual)
+
+Use this method only for local debugging without containers.  
+PostgreSQL must be installed locally.
+
+### Steps
+
+1. Start PostgreSQL and create a database named `saas_db`
+
+2. Install Dependencies:
+```bash
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+3. Setup Backend:
+   - Create `backend/.env` with `DB_HOST=localhost`
+   - Run migrations:
+     ```bash
+     npm run migrate
+     ```
+   - Run seeds:
+     ```bash
+     npm run seed
+     ```
+   - Start server:
+     ```bash
+     npm run dev
+     ```
+
+4. Start Frontend:
 ```bash
 cd frontend
 npm start
-# http://localhost:3000
 ```
 
----
+## 2.5 Run Tests
 
-### 2.5 Run with Docker (Mandatory for Evaluation)
+To run the backend test suite (Unit & Integration tests):
 
-1. Ensure Docker Desktop is running.
-2. From the project root:
+### Using Docker (Recommended)
+
 ```bash
-docker-compose up -d
+docker exec -it backend npm test
 ```
 
-3. Verify:
-- Frontend: http://localhost:3000  
-- Backend health: http://localhost:5000/api/health  
-- Database: internal port 5432
-
----
-
-### 2.6 Run Tests
-
-**Backend tests**
+### Running Manually
 ```bash
 cd backend
 npm test
 ```
-
-- Verifies correct status codes (200, 401, 403)
-- Ensures tenant isolation logic

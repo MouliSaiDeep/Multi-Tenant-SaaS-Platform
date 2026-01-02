@@ -32,56 +32,58 @@ The database uses a **Shared Database + Shared Schema** approach.
 
 This API adheres to REST principles. All responses follow the format:
 
-```
 { success: boolean, message: string, data: object }
-```
+
 
 ### Module 1: Authentication
 
-| Method | Endpoint | Auth Required | Roles Allowed | Description |
-|------|---------|---------------|---------------|-------------|
-| POST | /api/auth/register-tenant | No | Public | Register new tenant & admin |
-| POST | /api/auth/login | No | Public | User login & token generation |
-| GET | /api/auth/me | Yes | All Roles | Get current user & tenant info |
-| POST | /api/auth/logout | Yes | All Roles | Logout user |
+| Method | Endpoint                  | Auth Required | Roles Allowed | Description                    |
+| ------ | ------------------------- | ------------- | ------------- | ------------------------------ |
+| POST   | /api/auth/register-tenant | No            | Public        | Register new tenant & admin    |
+| POST   | /api/auth/login           | No            | Public        | User login & token generation  |
+| POST   | /api/auth/logout          | Yes           | All Roles     | Logout user                    |
+| GET    | /api/auth/me              | Yes           | All Roles     | Get current user & tenant info |
 
 ### Module 2: Tenant Management
 
-| Method | Endpoint | Auth Required | Roles Allowed | Description |
-|------|---------|---------------|---------------|-------------|
-| GET | /api/tenants | Yes | super_admin | List all tenants (paginated) |
-| GET | /api/tenants/:tenantId | Yes | super_admin, Owner | Get tenant details |
-| PUT | /api/tenants/:tenantId | Yes | super_admin, tenant_admin | Update tenant details |
+| Method | Endpoint               | Auth Required | Roles Allowed             | Description                  |
+| ------ | ---------------------- | ------------- | ------------------------- | ---------------------------- |
+| GET    | /api/tenants           | Yes           | super_admin               | List all tenants (paginated) |
+| POST   | /api/tenants/upgrade   | Yes           | tenant_admin              | Upgrade subscription plan    |
+| GET    | /api/tenants/:tenantId | Yes           | super_admin, Owner        | Get tenant details           |
+| PUT    | /api/tenants/:tenantId | Yes           | super_admin, tenant_admin | Update tenant details        |
 
 ### Module 3: User Management
 
-| Method | Endpoint | Auth Required | Roles Allowed | Description |
-|------|---------|---------------|---------------|-------------|
-| GET | /api/tenants/:tenantId/users | Yes | tenant_admin, user | List users in tenant |
-| POST | /api/tenants/:tenantId/users | Yes | tenant_admin | Add user (checks plan limits) |
-| PUT | /api/users/:userId | Yes | tenant_admin, Owner | Update user details |
-| DELETE | /api/users/:userId | Yes | tenant_admin | Delete user |
+| Method | Endpoint                     | Auth Required | Roles Allowed       | Description                   |
+| ------ | ---------------------------- | ------------- | ------------------- | ----------------------------- |
+| GET    | /api/tenants/:tenantId/users | Yes           | tenant_admin, user  | List users in tenant          |
+| POST   | /api/tenants/:tenantId/users | Yes           | tenant_admin        | Add user (checks plan limits) |
+| PUT    | /api/users/:userId           | Yes           | tenant_admin, Owner | Update user details           |
+| DELETE | /api/users/:userId           | Yes           | tenant_admin        | Delete user                   |
 
 ### Module 4: Project Management
 
-| Method | Endpoint | Auth Required | Roles Allowed | Description |
-|------|---------|---------------|---------------|-------------|
-| GET | /api/projects | Yes | All Roles | List projects for tenant |
-| POST | /api/projects | Yes | All Roles | Create project (checks limits) |
-| PUT | /api/projects/:projectId | Yes | tenant_admin, Creator | Update project |
-| DELETE | /api/projects/:projectId | Yes | tenant_admin, Creator | Delete project |
+| Method | Endpoint                 | Auth Required | Roles Allowed         | Description                    |
+| ------ | ------------------------ | ------------- | --------------------- | ------------------------------ |
+| GET    | /api/projects            | Yes           | All Roles             | List projects for tenant       |
+| POST   | /api/projects            | Yes           | All Roles             | Create project (checks limits) |
+| GET    | /api/projects/:projectId | Yes           | All Roles             | Get project details            |
+| PUT    | /api/projects/:projectId | Yes           | tenant_admin, Creator | Update project                 |
+| DELETE | /api/projects/:projectId | Yes           | tenant_admin, Creator | Delete project                 |
 
 ### Module 5: Task Management
 
-| Method | Endpoint | Auth Required | Roles Allowed | Description |
-|------|---------|---------------|---------------|-------------|
-| GET | /api/projects/:projectId/tasks | Yes | All Roles | List tasks in project |
-| POST | /api/tasks | Yes | All Roles | Create task |
-| PUT | /api/tasks/:taskId | Yes | All Roles | Update task details |
-| PATCH | /api/tasks/:taskId/status | Yes | All Roles | Update task status only |
+| Method | Endpoint                       | Auth Required | Roles Allowed | Description             |
+| ------ | ------------------------------ | ------------- | ------------- | ----------------------- |
+| GET    | /api/projects/:projectId/tasks | Yes           | All Roles     | List tasks in project   |
+| POST   | /api/tasks                     | Yes           | All Roles     | Create task             |
+| PATCH  | /api/tasks/:taskId/status      | Yes           | All Roles     | Update task status only |
+| PUT    | /api/tasks/:taskId             | Yes           | All Roles     | Update task details     |
+| DELETE | /api/tasks/:taskId             | Yes           | All Roles     | Delete task             |
 
 ### System
 
-| Method | Endpoint | Auth Required | Roles Allowed | Description |
-|------|---------|---------------|---------------|-------------|
-| GET | /api/health | No | Public | Health check (DB connection) |
+| Method | Endpoint    | Auth Required | Roles Allowed | Description                  |
+| ------ | ----------- | ------------- | ------------- | ---------------------------- |
+| GET    | /api/health | No            | Public        | Health check (DB connection) |
